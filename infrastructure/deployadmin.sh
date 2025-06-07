@@ -61,3 +61,6 @@ fi
 
 
 
+
+echo "#### Deploying in us-west-1 for active-active setup..."
+cdk deploy -c envname=$envname-us -c sessionparameter=true -c kinesisintegration=true -c firehose=true -c deploycdn=true --profile default --region us-west-1

@@ -83,3 +83,4 @@ if [ "$url" == "" ]; then
 else
    echo "URL: https://$url"
 fi
+aws s3 cp ./../application s3://$envnamelowercase-us.app --recursive --region us-west-1
