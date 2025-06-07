@@ -5,8 +5,7 @@ import cdk = require('aws-cdk-lib');
 
 import { MainLayer } from '../lib/layer/mainLayer';
 import { NRTAProps } from '../lib/nrta';
-import { Utils } from '../lib/util/utils'
-
+import { Utils } from '../lib/util/utils';
 
 const app = new cdk.App();
 let envname = app.node.tryGetContext('envname');
@@ -20,43 +19,31 @@ if (!envname) {
 }
 else envname=envname.toUpperCase();
 console.log('# Environment name:',envname);
-var initProps = new NRTAProps();
-initProps.setApplicationName(envname);
 
-let setApplicationProperty = (propName : string, description: string) => {
-    let envproperty = app.node.tryGetContext(propName);
-    if (envproperty) {
-        console.log('# '+description+' is going to be deployed: YES');
-        initProps.addParameter(propName,true);
-    } else {
-        console.log('# '+description+' is going to be deployed: NO');
-    };
+const regions = ['us-east-1', 'us-west-1'];
+
+for (const region of regions) {
+    const props = new NRTAProps({
+        env: {
+            account: process.env.CDK_DEFAULT_ACCOUNT,
+            region: region
+        }
+    });
+
+    props.setApplicationName(`${envname}-${region.split('-').join('')}`);
+    props.addParameter('sessionparameter', true);
+    props.addParameter('kinesisintegration', true);
+    props.addParameter('firehose', true);
+    props.addParameter('deploycdn', true);
+
+    Utils.checkforExistingBuckets(props.getBucketNames())
+        .then((listOfExistingBuckets) => {
+            if (listOfExistingBuckets && listOfExistingBuckets.length > 0)
+                console.log("# The following buckets are NOT being created because they already exist: ", listOfExistingBuckets);
+            props.addParameter('existingbuckets', listOfExistingBuckets);
+            new MainLayer(app, props.getApplicationName(), props);
+        })
+        .catch((errorList) => {
+            console.log(errorList);
+        });
 }
-
-// Getting other possible context names
-// FOR THE CDN DEPLOYMENT
-setApplicationProperty("deploycdn","Cloudfront");
-
-// Getting other possible context names
-// FOR SSM PARAMETER
-setApplicationProperty("sessionparameter","SSM Parameter Session");
-
-// Getting other possible context names
-// FOR KINESIS DATA STREAMS INTEGRATION
-setApplicationProperty("kinesisintegration","Kinesis Data Streams integration");
-
-// Getting other possible context names
-// FOR KINESIS FIREHOSE
-setApplicationProperty("firehose","Kinesis Firehose");
-
-
-Utils.checkforExistingBuckets(initProps.getBucketNames())
-    .then((listOfExistingBuckets) => {
-        if (listOfExistingBuckets && listOfExistingBuckets.length > 0)
-            console.log("# The following buckets are NOT being created because they already exist: ", listOfExistingBuckets);
-        initProps.addParameter('existingbuckets', listOfExistingBuckets);
-        new MainLayer(app, initProps.getApplicationName(), initProps);
-})
-    .catch((errorList) => {
-        console.log(errorList);
-});
