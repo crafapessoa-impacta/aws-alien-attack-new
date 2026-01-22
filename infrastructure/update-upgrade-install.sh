@@ -26,9 +26,9 @@ UPDATE_TYPE="AUTOMATIC"
 case $OSNAME in
    AMAZON)
         sudo yum update -y
-        node_version="v18.17.1"
-        tsc_version="5.0.3"
-        cdk_version="2.101.1" 
+        node_version="v20.5.1"
+        tsc_version="5.1.6"
+        cdk_version="2.150.0" 
         ;;
    UBUNTU)
         sudo apt-get update -y
@@ -53,6 +53,20 @@ fi
 echo --
 echo Configuring your $OSNAME
 echo --
+### Check if nvm is installed
+if ! command -v nvm &> /dev/null; then
+    echo "nvm is not installed. Installing nvm..."
+    # Download nvm installation script
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.37.2/install.sh | bash
+    # Load nvm
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+    echo "nvm has been installed."
+else
+    echo "nvm is already installed."
+fi
+###
 echo Configuring nodejs
 #node_version=$(nvm ls-remote --lts | grep Latest | tail -1 | grep -o 'v[.0-9]*' | sed 's/\x1b\[[0-9;]*m//g')
 #node_version=${node_version:1}
